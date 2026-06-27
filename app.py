@@ -5,6 +5,38 @@ import random
 
 # Sahifa sozlamalari (UI va Dizayn professional bo'lishi uchun)
 st.set_page_config(page_title="CEO Grand Command Center Enterprise", page_icon="👑", layout="wide")
+import secrets
+import time
+
+# --- 1. DINAMIK QR TOKEN GENERATORI ---
+def get_dynamic_qr_token():
+    # Vaqtga bog'langan takrorlanmas xavfsiz token yaratish
+    current_time = int(time.time())
+    # Har 45 soniyada o'zgaradigan interval kaliti
+    time_interval = current_time // 45 
+    secret_key = f"GLOBAL_SECRET_2026_{time_interval}"
+    token = secrets.token_hex(16)
+    return token
+
+# --- 2. AVTOMATLASHTIRILGAN PAYROLL ENGINE (9-BO'LIM) ---
+def calculate_payroll_logic(worked_days, worked_hours, late_minutes, overtime_minutes, base_salary, salary_type):
+    # Koeffitsiyentlarni dinamik hisoblash
+    late_penalty_per_minute = 1000  # 1 daqiqa kechikish uchun 1000 won jarima
+    overtime_multiplier = 1.5       # Overtime uchun 150% stavka
+    
+    if salary_type == 'Hourly':
+        hourly_rate = base_salary
+        earned = worked_hours * hourly_rate
+    else:
+        # Monthly bo'lsa, standart 209 soatga bo'lib soatbay stavka olinadi
+        hourly_rate = base_salary / 209
+        earned = base_salary
+        
+    overtime_earned = (overtime_minutes / 60) * hourly_rate * overtime_multiplier
+    penalty = late_minutes * late_penalty_per_minute
+    
+    final_salary = earned + overtime_earned - penalty
+    return max(0, round(final_salary, 2))
 
 # Custom CSS orqali chiroyli dizayn berish
 st.markdown("""
