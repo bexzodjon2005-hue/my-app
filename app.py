@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import datetime
 import random
-
+import secrets 
+import time 
 # Sahifa sozlamalari (UI va Dizayn professional bo'lishi uchun)
 st.set_page_config(page_title="CEO Grand Command Center Enterprise", page_icon="👑", layout="wide")
 import secrets
@@ -262,15 +263,15 @@ elif ("Menejer" in role or "Manager" in role) and authenticated:
     m_tab1, m_tab2, m_tab3 = st.tabs(["📊 Keldi-Ketdi Real-Time Monitoring", "📅 Oylik Ish Jadvallari", "👥 Ishchilar Ro'yxati"])
     
     with m_tab1:
-            with m_tab1:
-    st.write("---")
-    placeholder = st.empty()
-    qr_token = get_dynamic_qr_token()
-    with placeholder.container():
-        st.info(f"🔑 Eksklyuziv Davomat Tokeni: {qr_token}")
-        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={qr_token}"
-        st.image(qr_url, caption="Xodimlar telefon orqali skner qilishlari shart (Har 45 soniyada yangilanadi)")
-    st.write("---")
+            st.write("---")
+            placeholder = st.empty()
+            qr_token = get_dynamic_qr_token()
+            with placeholder.container():
+                st.info(f"🔑 Eksklyuziv Davomat Tokeni: {qr_token}")
+                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={qr_token}"
+                st.image(qr_url, caption="Xodimlar telefon orqali skner qilishlari shart (Har 45 soniyada yangilanadi)")
+            st.write("---")
+
 
         st.subheader("📱 QR-skanerdan o'tgan xodimlarning real vaqt dagi onlayn oqimi")
         df_logs = pd.DataFrame(st.session_state.attendance_logs)
