@@ -273,9 +273,9 @@ elif ("Menejer" in role or "Manager" in role) and authenticated:
             st.write("---")
 
 
-        st.subheader("📱 QR-skanerdan o'tgan xodimlarning real vaqt dagi onlayn oqimi")
-        df_logs = pd.DataFrame(st.session_state.attendance_logs)
-        st.dataframe(df_logs, use_container_width=True)
+            st.subheader("📱 QR-skanerdan o'tgan xodimlarning real vaqt dagi onlayn oqimi")
+            df_logs = pd.DataFrame(st.session_state.attendance_logs)
+            st.dataframe(df_logs, use_container_width=True)
         
     with m_tab2:
         st.subheader("📅 Avtomatlashtirilgan va Arxiv Ish Jadvallari")
