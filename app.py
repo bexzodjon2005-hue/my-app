@@ -341,7 +341,30 @@ elif ("CEO" in role or "대표님" in role) and authenticated:
         st.subheader("📅 Davomat va Ish Jadvallarining Markaziy Nazorati")
         st.write("Menejer va ishchilarning jadvallari muvofiqligi:")
         st.dataframe(pd.DataFrame(st.session_state.attendance_logs), use_container_width=True)
+        st.write("---")
+        st.markdown("#### 💰 Avtomatlashtirilgan Oylik Maosh Generator")
         
+        if st.button("🧮 Hisobotni Generatsiya Qilish"):
+            # Yuqorida yozilgan maosh funksiyasini chaqiramiz
+            final_sum = calculate_payroll_logic(22, 176, 12, 90, 3200000, 'Monthly')
+            st.success(f"🤖 Tizim hisobladi. Namuna xodimning yakuniy maoshi: {final_sum:,} WON")
+            
+            # Eksport uchun jadval tuzamiz
+            report_df = pd.DataFrame([{
+                "Xodim": "Namuna Xodim",
+                "Ishlagan kunlari": 22,
+                "Kechikish (Daqiqa)": 12,
+                "Overtime (Daqiqa)": 90,
+                "Yakuniy Maosh (WON)": final_sum
+            }])
+            
+            st.download_button(
+                label="📊 Excel (CSV) formatda yuklab olish",
+                data=report_df.to_csv(index=False).encode('utf-8'),
+                file_name="Oylik_Finans_Hisoboti.csv",
+                mime="text/csv"
+            )
+
     with c_tab3:
         st.subheader("👥 Barcha Xodimlarning Tug'ilgan kunlari va Ma'lumotlari")
         st.dataframe(pd.DataFrame(st.session_state.workers_list), use_container_width=True)
