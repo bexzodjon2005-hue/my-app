@@ -2,401 +2,293 @@ import streamlit as st
 import pandas as pd
 import datetime
 import random
-import secrets 
-import time 
-# Sahifa sozlamalari (UI va Dizayn professional bo'lishi uchun)
-st.set_page_config(page_title="CEO Grand Command Center Enterprise", page_icon="👑", layout="wide")
-import secrets
-import time
 
-# --- 1. DINAMIK QR TOKEN GENERATORI ---
-def get_dynamic_qr_token():
-    # Vaqtga bog'langan takrorlanmas xavfsiz token yaratish
-    current_time = int(time.time())
-    # Har 45 soniyada o'zgaradigan interval kaliti
-    time_interval = current_time // 45 
-    secret_key = f"GLOBAL_SECRET_2026_{time_interval}"
-    token = secrets.token_hex(16)
-    return token
+# 1. SAHIFA SOZLAMALARI
+st.set_page_config(page_title="Integratsiyalashgan TIZIM", layout="wide")
 
-# --- 2. AVTOMATLASHTIRILGAN PAYROLL ENGINE (9-BO'LIM) ---
-def calculate_payroll_logic(worked_days, worked_hours, late_minutes, overtime_minutes, base_salary, salary_type):
-    # Koeffitsiyentlarni dinamik hisoblash
-    late_penalty_per_minute = 1000  # 1 daqiqa kechikish uchun 1000 won jarima
-    overtime_multiplier = 1.5       # Overtime uchun 150% stavka
-    
-    if salary_type == 'Hourly':
-        hourly_rate = base_salary
-        earned = worked_hours * hourly_rate
-    else:
-        # Monthly bo'lsa, standart 209 soatga bo'lib soatbay stavka olinadi
-        hourly_rate = base_salary / 209
-        earned = base_salary
-        
-    overtime_earned = (overtime_minutes / 60) * hourly_rate * overtime_multiplier
-    penalty = late_minutes * late_penalty_per_minute
-    
-    final_salary = earned + overtime_earned - penalty
-    return max(0, round(final_salary, 2))
-
-# Custom CSS orqali chiroyli dizayn berish
+# 2. DIZAYN VA CSS
 st.markdown("""
     <style>
-    .main-title { font-size: 32px; font-weight: bold; color: #1E3A8A; text-align: center; }
-    .welcome-text { font-size: 18px; color: #4B5563; text-align: center; margin-bottom: 20px; }
-    .card { padding: 20px; border-radius: 10px; background-color: #F3F4F6; margin-bottom: 15px; }
+    .main-title { font-size: 30px; font-weight: bold; text-align: center; color: #2C3E50; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 10 TA GAPDAN IBORAT MATRIX LUG'ATLARI ---
-early_wishes = [
-    "Quyoshdan ham ertaroq uyg'ongan qahramonimiz, xush kelibsiz! Bugungi kuningiz omadli o'tsin! ✨",
-    "Ertapishar ishchi — kompaniyamizning chinakam poydevoridir. Katta rahmat sizga! 🌟",
-    "Intizomingiz va mas'uliyatingiz tahsinga loyiq! Kuningiz unumli bo'lsin! 🚀",
-    "Ertalabki faollik — g'alaba kalitidir. Bugun barcha maqsadlaringizga erishing! 💪",
-    "Siz bor joyda rivojlanish bor! Erta kelib namuna bo'lganingiz uchun rahmat! 🎯",
-    "Yorqin tabassum va yuqori energiya bilan yangi cho'qqilarni zabt etishga olg'a! 🔥",
-    "Kompaniyamiz sizdek fidoyi xodimlar bilan faxrlanadi! Kuningiz ajoyib o'tsin! 👑",
-    "Ertalabki musaffo havo va yangi g'oyalar sizni yuksaltirsin! Xush kelibsiz! 🌈",
-    "Sizning bu intizomingiz xonimning va menejerlarning doimiy diqqat markazida! ⭐",
-    "Erta kelgan rizqini ortig'i bilan oladi. Bugungi omad sizniki! 💰"
-]
-
-late_wishes = [
-    "Xush kelibsiz! Yo'lda biron texnik nosozlik yoki tirbandlik bo'ldimi? Salomatlik birinchi o'rinda! 😊",
-    "Kechikkan bo'lsangiz ham kelganingizdan xursandmiz. Keling, tezda jamoaga qo'shiling! 🙏",
-    "Kichik kechikishlar kayfiyatni tushira olmaydi. Bugun buni ajoyib natijalar bilan yopamiz! ⚡",
-    "Kompaniyamiz sizni kutayotgan edi. Muloyimlik bilan eslatamiz, ertaga sizni erda kutamiz! 😉",
-    "Sizning energiyangiz bizga yetishmayotgan edi. Ish boshlashga tayyormisiz? Olg'a! 🚀",
-    "Xavotir olmang, hamma narsaga ulgurasiz. Diqqatni jamlab, ishni professional darajada boshlaymiz! 🎯",
-    "Kechikish sababi muhim emas, eng muhimi siz hozir safdasiz. Unumli kun tilaymiz! ✨",
-    "Vaqt — eng oliy boylik. Ertaga intizomni yanada mukammal qilishga kelishdik, to'g'rimi? 👍",
-    "Kechikishlar sizdek yaxshi xodimga yarashmaydi, bugun bor kuchingizni ko'rsatib hammaga o'rnak bo'ling! 🔥",
-    "Xush kelibsiz! Sizsiz jamoamiz to'liq emas edi. Ish rejasiga tezda kirishamiz! 💼"
-]
-
-goodbye_wishes = [
-    "Bugun ajoyib mehnat qildingiz! Mashaqqatli mehnatingiz uchun tashakkur, yaxshi dam oling! 🌙",
-    "Uyingizga borar ekansiz, yo'lingiz bexatar bo'lsin. Ertagacha xayr! 👋",
-    "Kompaniya rivojiga qo'shgan bugungi hissangiz bebahodir. Oqshomingiz xayrli o'tsin! 🌟",
-    "Charchoqlarni chiqarib, oilangiz bag'rida shirin dam oling! Ertaga uchrashguncha! 🏠",
-    "Siz bugun chinakam professional ekanligingizni yana bir bor isbotladingiz. Rahmat! 🎯",
-    "Bugungi barcha vazifalar bajarildi, endi esa miriqib hordiq chiqarish vaqti! 🛌",
-    "Yo'llaringiz ravon bo'lsin. Ertaga yangi kuch va yuqori kayfiyat bilan kutamiz! 🚀",
-    "Kuningiz unumli o'tganidan xursandmiz. Ertaga bundan ham zo'r natijalar sari! 🔥",
-    "Sizdek xodim bilan ishlash jamoamiz uchun sharaf. Yaxshi dam oling! 👑",
-    "Xayrli oqshom! Kompaniya sizga bugungi zafarli ish kuningiz uchun minnatdorchilik bildiradi! ⭐"
-]
-
-# --- KO'P TILLI LUG'AT TIZIMI (Sessiya va Oynalar uchun) ---
+# 3. KO'P TILLI LUG'AT (DICTIONARY)
 lang_dict = {
     "O'zbekcha": {
         "nav_menu": "Asosiy Menyu",
-        "roles": ["Ishchi (Staff)", "Menejer (Manager)", "CEO (Xonim)"],
+        "roles": ["Ishchi (Staff)", "Menejer (Manager)", "CEO (Boshqaruv)"],
         "sidebar_title": "Boshqaruv Markazi",
-        "worker_reg": "📝 Yangi xodim ro'yxatdan o'tishi",
-        "worker_io": "👥 Keldi-Ketdi Skanerlash Oynasi",
-        "feedback_title": "📩 Shikoyat va Takliflar Bo'limi",
-        "manager_title": "💼 Menejer Boshqaruv Markazi",
-        "ceo_title": "👑 CEO Oliy Boshqaruv Markazi"
+        "worker_reg": "Yangi xodim ro'yxatdan o'tishi",
+        "worker_io": "Keldi-Ketdi Skanerlash",
+        "feedback_title": "Shikoyat va Takliflar",
+        "manager_title": "Menejer Boshqaruv Markazi",
+        "ceo_title": "CEO Oliy Boshqaruv",
+        "check_in": "🚪 KELISH (Check-In)",
+        "check_out": "🏠 KETISH (Check-Out)",
+        "select_worker": "Ism-familiyangizni tanlang:",
+        "save_btn": "Saqlash",
     },
     "English": {
         "nav_menu": "Main Menu",
-        "roles": ["Staff", "Manager", "CEO (Ma'am)"],
+        "roles": ["Staff", "Manager", "CEO"],
         "sidebar_title": "Command Center",
-        "worker_reg": "📝 New Employee Registration",
-        "worker_io": "👥 Check-In / Check-Out Scanning Window",
-        "feedback_title": "📩 Suggestions & Complaints",
-        "manager_title": "💼 Manager Management Center",
-        "ceo_title": "👑 CEO Supreme Command Center"
+        "worker_reg": "New Employee Registration",
+        "worker_io": "Check-In / Check-Out",
+        "feedback_title": "Suggestions & Complaints",
+        "manager_title": "Manager Management Center",
+        "ceo_title": "CEO Supreme Command",
+        "check_in": "🚪 CHECK-IN",
+        "check_out": "🏠 CHECK-OUT",
+        "select_worker": "Select your name:",
+        "save_btn": "Save",
     },
     "한국어": {
         "nav_menu": "메인 메뉴",
-        "roles": ["직원 (Staff)", "매니저 (Manager)", "CEO (대표님)"],
+        "roles": ["직원 (Staff)", "매니저 (Manager)", "CEO (대표)"],
         "sidebar_title": "통합 관제 센터",
-        "worker_reg": "📝 신입 직원 정보 등록",
-        "worker_io": "👥 출퇴근 QR 스캔 윈도우",
-        "feedback_title": "📩 건의 및 불만 접수 창구",
-        "manager_title": "💼 매니저 통합 관리 센터",
-        "ceo_title": "👑 CEO 최고 경영 통합 관제 센터"
-           "O'zbekcha": {
-        "nav_menu": "Asosiy Menyu",
-        "check_in": "🚪 KELISH (Check-In)",
-        "check_out": "🏠 KETISH (Check-Out)",
-    },
-    "한국어": {
-        "nav_menu": "메인 메뉴",
+        "worker_reg": "신입 직원 정보 등록",
+        "worker_io": "출퇴근 QR 스캔 윈도우",
+        "feedback_title": "건의 및 불만 접수",
+        "manager_title": "매니저 통합 관리 센터",
+        "ceo_title": "CEO 최고 경영 관제",
         "check_in": "🚪 출근 (Check-In)",
         "check_out": "🏠 퇴근 (Check-Out)",
-    },
-
- }
+        "select_worker": "직원 이름을 선택하세요:",
+        "save_btn": "저장",
+    }
 }
 
-# Tilni sessiyadan olish
-lang = st.session_state.get('lang', 'O\'zbekcha')
+# 4. SESSİYA BAZASINI YARATISH (Ma'lumotlar saqlanib qolishi uchun)
+if 'lang' not in st.session_state:
+    st.session_state.lang = "O'zbekcha"
 
-# --- SESSYA BAZASI (Ma'lumotlar yo'qolib ketmasligi uchun Streamlit State) ---
 if "workers_list" not in st.session_state:
     st.session_state.workers_list = [
-        {"ID": "EMP-01", "Ism": "Anvarov Dilshod", "Tugilgan_kun": "1995-05-12", "Lavozim": "Manager"},
-        {"ID": "EMP-02", "Ism": "Karimova Zilola", "Tugilgan_kun": "1998-09-22", "Lavozim": "HR Specialist"},
-        {"ID": "EMP-03", "Ism": "Sultonov Bekzod", "Tugilgan_kun": "2005-01-15", "Lavozim": "Lead Developer"},
-        {"ID": "EMP-04", "Ism": "Toshpulatova Sevara", "Tugilgan_kun": "2000-11-02", "Lavozim": "Designer"},
-        {"ID": "EMP-05", "Ism": "Azimov Rustam", "Tugilgan_kun": "1993-04-30", "Lavozim": "Accountant"},
+        {"ID": "EMP-01", "Ism": "Anvarov Dilshod", "Tugilgan_sana": "1990-05-15"},
+        {"ID": "EMP-02", "Ism": "Karimova Zilola", "Tugilgan_sana": "1995-08-22"},
+        {"ID": "EMP-03", "Ism": "Sultonov Bekzod", "Tugilgan_sana": "1992-11-10"}
     ]
 
 if "attendance_logs" not in st.session_state:
-    st.session_state.attendance_logs = [
-        {"Sana": "2026-06-27", "ID": "EMP-01", "Xodim": "Anvarov Dilshod", "Vaqt": "08:42", "Tur": "Keldi (Check-In)", "Holat": "Erta keldi ✅"},
-        {"Sana": "2026-06-27", "ID": "EMP-02", "Xodim": "Karimova Zilola", "Vaqt": "09:12", "Tur": "Keldi (Check-In)", "Holat": "Kechikdi ⚠️"}
-    ]
+    st.session_state.attendance_logs = []
 
 if "feedbacks" not in st.session_state:
-    st.session_state.feedbacks = [
-        {"Xodim": "Karimova Zilola", "Sana": "2026-06-26", "Turi": "Taklif", "Matn": "Oshxonaga yangi kofe mashinasi qo'yilsa yaxshi bo'lar edi."}
-    ]
+    st.session_state.feedbacks = []
 
 if "vacation_requests" not in st.session_state:
-    st.session_state.vacation_requests = {
-        "Anvarov Dilshod": ["Dushanba", "Seshanba"],
-        "Karimova Zilola": ["Shanba", "Yakka"]
-    }
+    st.session_state.vacation_requests = {}
 
-# --- SIDEBAR: TIL VA ROL TANLASH ---
-st.sidebar.header("🌐 Language / Til / 언어")
-selected_lang = st.sidebar.selectbox("Choose language:", ["O'zbekcha", "English", "한국어"])
-lang = lang_dict[selected_lang]
+# Tilni sessiyadan o'qib olish
+lang = st.session_state.lang
+
+# 5. YON MENYU (SIDEBAR) VA TIL SOZLAMALARI
+st.sidebar.title("🌍 Til / Language / 언어")
+lang_options = ["O'zbekcha", "English", "한국어"]
+selected_lang = st.sidebar.selectbox("", lang_options, index=lang_options.index(lang))
+
+if selected_lang != lang:
+    st.session_state.lang = selected_lang
+    st.rerun()
 
 st.sidebar.markdown("---")
-st.sidebar.subheader(lang["sidebar_title"])
-role = st.sidebar.selectbox(lang["nav_menu"], lang["roles"])
+st.sidebar.subheader(lang_dict[lang]["sidebar_title"])
+role = st.sidebar.selectbox(lang_dict[lang]["nav_menu"], lang_dict[lang]["roles"])
 
-# Xavfsizlik parollari
+# 6. PAROL TIZIMI (Manager va CEO uchun)
 authenticated = False
-if "CEO" in role or "대표님" in role:
-    pwd = st.sidebar.text_input("CEO Password:", type="password", key="ceo_pwd_key")
-    if pwd == "ceo123": authenticated = True
-elif "Menejer" in role or "Manager" in role:
-    pwd = st.sidebar.text_input("Manager Password:", type="password", key="mgr_pwd_key")
-    if pwd == "mgr123": authenticated = True
+if "Manager" in role or "매니저" in role or "Menejer" in role:
+    pwd = st.sidebar.text_input("Parol (Password):", type="password")
+    if pwd == "mgr123":
+        authenticated = True
+elif "CEO" in role or "대표" in role or "Boshqaruv" in role:
+    pwd = st.sidebar.text_input("Parol (Password):", type="password")
+    if pwd == "ceo123":
+        authenticated = True
 else:
-    authenticated = True
+    authenticated = True # Ishchilar (Staff) uchun parol talab qilinmaydi
 
 st.sidebar.markdown("---")
+if authenticated:
+    # --- 1. ISHCHILAR STRUKTURASI ---
+    if "Ishchi" in role or "Staff" in role or "직원" in role:
+        st.markdown("<div class='main-title'>👥 ISHCHILAR TIZIMI</div>", unsafe_allow_html=True)
+        st.markdown("---")
 
-# --- 1. ISHCHILAR STRUKTURASI ---
-if "Ishchi" in role or "Staff" in role or "직원" in role:
-    st.markdown("<div class='main-title'>👥 ISHCHILAR INTEGRATSIYALASHGAN TIZIMI</div>", unsafe_allow_html=True)
-    
-    tab1, tab2, tab3 = st.tabs([lang["worker_io"], lang["worker_reg"], lang["feedback_title"]])
-    
-    # Keldi-Ketdi Oynasi (QR o'rniga dinamik tugma)
-    with tab1:
-            st.subheader("📲 Real-vaqt rejimida keldi-ketdi skanerlash")
-            st.write("QR kod skaner qilinganda tizim avtomat ishchining vaqtini va holatini aniqlaydi.")
-        
+        # Tablarni lug'atdan chaqiramiz
+        tab1, tab2, tab3 = st.tabs([
+            lang_dict[lang]["worker_io"], 
+            lang_dict[lang]["worker_reg"], 
+            lang_dict[lang]["feedback_title"]
+        ])
+
+        # ==========================================
+        # TAB 1: KELDI-KETDI OYNASI
+        # ==========================================
+        with tab1:
+            st.subheader(f"📲 {lang_dict[lang]['worker_io']}")
+            
+            # Vaqt va sanani aniqlash
             current_time_str = datetime.datetime.now().strftime("%H:%M")
             current_date_str = datetime.date.today().strftime("%Y-%m-%d")
-        
-            st.info(f"📅 Bugungi sana: {current_date_str} | ⏰ Joriy vaqt: {current_time_str}")
-        
-            selected_worker = st.selectbox("Ism-familiyangizni tanlang:", [w["Ism"] for w in st.session_state.workers_list])
+            
+            st.info(f"📅 {current_date_str} | ⏰ {current_time_str}")
+
+            # Xodimni tanlash (Dinamik ro'yxatdan)
+            selected_worker = st.selectbox(
+                lang_dict[lang]["select_worker"], 
+                [w["Ism"] for w in st.session_state.workers_list]
+            )
+            
+            # Tanlangan xodimning ID sini topish
             worker_id = [w["ID"] for w in st.session_state.workers_list if w["Ism"] == selected_worker][0]
-        
+
+            # Tugmalar uchun 2 ta ustun
             col_btn1, col_btn2 = st.columns(2)
+
             with col_btn1:
+                # KELISH TUGMASI
                 if st.button(lang_dict[lang]["check_in"], type="primary", use_container_width=True):
-                    # 09:00 dan oldin kelsa erta, keyin kelsa kechikdi
+                    # Kechikkanlikni tekshirish (09:00 dan keyin)
                     is_late = datetime.datetime.now().hour >= 9 and datetime.datetime.now().minute > 0
                     status_text = "Kechikdi ⚠️" if is_late else "Erta keldi ✅"
-                    wish = random.choice(late_wishes) if is_late else random.choice(early_wishes)
-                
+                    
+                    # Ma'lumotlar bazasiga yozish
                     st.session_state.attendance_logs.append({
-                        "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Keldi (Check-In)", "Holat": status_text
+                        "Sana": current_date_str,
+                        "ID": worker_id,
+                        "Xodim": selected_worker,
+                        "Vaqt": current_time_str,
+                        "Holat": f"KELDI ({status_text})"
                     })
-                    st.success(wish)
+                    st.success(f"✅ {selected_worker} tizimga kirdi ({current_time_str})")
                     st.balloons()
-                
+
             with col_btn2:
+                # KETISH TUGMASI
                 if st.button(lang_dict[lang]["check_out"], use_container_width=True):
-                    wish = random.choice(goodbye_wishes)
+                    # Ma'lumotlar bazasiga yozish
                     st.session_state.attendance_logs.append({
-                        "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Ketish (Check-Out)", "Holat": "Ish yakunlandi 🏁"
+                        "Sana": current_date_str,
+                        "ID": worker_id,
+                        "Xodim": selected_worker,
+                        "Vaqt": current_time_str,
+                        "Holat": "KETDI 🏠"
                     })
-                    st.info(wish)
-        
-        st.markdown("---")
-        # 20-22 kunlar orasidagi aqlli dam olish kunini tanlash tizimi
-        st.subheader("📅 Keyingi oy uchun dam olish kunlarini tanlash")
-        st.write("Eslatma: Har oyning 20-kunigacha dam olish kunlarini belgilashingiz kerak. 22-kuni dastur yangi jadvalni e'lon qiladi.")
-        
-        chosen_days = st.multiselect("Kelgusi oydagi o'zingizga qulay dam olish kunlarini tanlang:", ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakirshanba"])
-        if st.button("Tanlovni saqlash 💾"):
-            st.session_state.vacation_requests[selected_worker] = chosen_days
-            st.success("Sizning dam olish kunlari bo'yicha so'rovingiz saqlandi va intellektual jadval tizimiga yuborildi!")
-
-    # Yangi xodimni ro'yxatdan o'tkazish
-    with tab2:
-        st.subheader(lang["worker_reg"])
-        new_name = st.text_input("Xodim ism-familiyasi:")
-        col_b1, col_b2, col_b3 = st.columns(3)
-        with col_b1: b_year = st.selectbox("Tug'ilgan yil:", list(range(1970, 2010)), index=25)
-        with col_b2: b_month = st.selectbox("Tug'ilgan oy:", list(range(1, 13)))
-        with col_b3: b_day = st.selectbox("Tug'ilgan kun:", list(range(1, 32)))
-        new_role = st.text_input("Lavozimi:", "Mutaxassis")
-        
-        if st.button("Ro'yxatdan o'tkazish va ID berish 📇"):
-            if new_name:
-                new_id = f"EMP-0{len(st.session_state.workers_list)+1}"
-                st.session_state.workers_list.append({
-                    "ID": new_id, "Ism": new_name, "Tugilgan_kun": f"{b_year}-{b_month:02d}-{b_day:02d}", "Lavozim": new_role
-                })
-                st.success(f"🎉 '{new_name}' muvaffaqiyatli ro'yxatdan o'tdi! Unikal Tizim ID raqami: {new_id}")
-            else:
-                st.error("Iltimos xodim ismini kiriting.")
-
-    # Shikoyat va takliflar
-    with tab3:
-        st.subheader(lang["feedback_title"])
-        f_type = st.radio("Murojaat turi:", ["Taklif", "Shikoyat"])
-        f_text = st.text_area("Murojaatingiz matnini batafsil yozing (CEO va Menejerga to'g'ridan-to'g'ri boradi):")
-        if st.button("Yuborish 📨"):
-            if f_text:
-                st.session_state.feedbacks.append({
-                    "Xodim": selected_worker, "Sana": current_date_str, "Turi": f_type, "Matn": f_text
-                })
-                st.success("Murojaatingiz maxfiy va xavfsiz tarzda rahbariyatga yetkazildi. Rahmat!")
-            else:
-                st.error("Matn bo'sh bo'lishi mumkin emas.")
-
-# --- 2. MENEJER STRUKTURASI ---
-elif ("Menejer" in role or "Manager" in role) and authenticated:
-    st.markdown("<div class='main-title'>💼 MENEJER STRATEGIK NAZORAT PANELl</div>", unsafe_allow_html=True)
-    
-    m_tab1, m_tab2, m_tab3 = st.tabs(["📊 Keldi-Ketdi Real-Time Monitoring", "📅 Oylik Ish Jadvallari", "👥 Ishchilar Ro'yxati"])
-    
-    with m_tab1:
-            st.write("---")
-            placeholder = st.empty()
-            qr_token = get_dynamic_qr_token()
-            with placeholder.container():
-                st.info(f"🔑 Eksklyuziv Davomat Tokeni: {qr_token}")
-                qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={qr_token}"
-                st.image(qr_url, caption="Xodimlar telefon orqali skner qilishlari shart (Har 45 soniyada yangilanadi)")
-            st.write("---")
-
-
-            st.subheader("📱 QR-skanerdan o'tgan xodimlarning real vaqt dagi onlayn oqimi")
-            df_logs = pd.DataFrame(st.session_state.attendance_logs)
-            st.dataframe(df_logs, use_container_width=True)
-        
-    with m_tab2:
-        st.subheader("📅 Avtomatlashtirilgan va Arxiv Ish Jadvallari")
-        st.write("O'tgan 3 oylik jadval tizimga yuklangan. Dastur uni o'rganib chiqdi:")
-        
-        # O'tgan oylar jadvallari (Simulyatsiya)
-        st.caption("📂 Arxiv jadvallar (O'tgan 3 oy) — Yuklab olish imkoniyati bilan (PDF/Rasm o'rniga CSV formatda)")
-        old_schedule = pd.DataFrame({
-            "Xodim": [w["Ism"] for w in st.session_state.workers_list],
-            "Aprel (Kun)": ["22 kun", "20 kun", "21 kun", "22 kun", "18 kun"],
-            "May (Kun)": ["20 kun", "22 kun", "22 kun", "19 kun", "21 kun"],
-            "Iyun (Kun)": ["21 kun", "21 kun", "20 kun", "22 kun", "22 kun"]
-        })
-        st.dataframe(old_schedule, use_container_width=True)
-        
-        # Har oyning 22-kuni jadval tuzish mantiqi
-        st.markdown("---")
-        st.subheader("🤖 Keyingi oy uchun AI/Dasturiy ish jadvali")
-        current_day = datetime.datetime.now().day
-        st.write(f"Bugungi kun: **{current_day}-sana**. Jadval har oyning 22-kunida xodimlarning dam olish kunlari so'roviga ko'ra tuziladi.")
-        
-        # Kelgusi oy jadvali tuzish
-        next_month_schedule = []
-        for w in st.session_state.workers_list:
-            name = w["Ism"]
-            requested_vacations = st.session_state.vacation_requests.get(name, ["Shanba", "Yakshanba"])
-            vacation_str = ", ".join(requested_vacations)
-            next_month_schedule.append({
-                "Xodim": name, "Lavozim": w["Lavozim"], "Belgilangan Dam olish kunlari": vacation_str, "Ish kunlari": "Dushanba - Juma (Smenali)"
-            })
+                    st.info(f"🏠 {selected_worker} tizimdan chiqdi ({current_time_str})")
             
-        st.dataframe(pd.DataFrame(next_month_schedule), use_container_width=True)
-        st.success("Tizim xodimlarning 20-kungacha kiritgan barcha ma'lumotlarini inobatga olgan holda keyingi oy rejasini tuzdi!")
-        
-    with m_tab3:
-        st.subheader("👥 Kompaniya ishchilari umumiy ma'lumotlar bazasi")
-        st.dataframe(pd.DataFrame(st.session_state.workers_list), use_container_width=True)
+            st.markdown("---")
+            
+            # Dam olish kuni so'rovi
+            st.write("📅 Keyingi oy uchun dam olish kunlarini tanlang (20-kunigacha):")
+            chosen_days = st.multiselect("Dam olish kunlari:", [str(i) for i in range(1, 32)])
+            
+            if st.button(lang_dict[lang]["save_btn"], key="save_vacation"):
+                st.session_state.vacation_requests[selected_worker] = chosen_days
+                st.success("Yuborildi! ✅")
 
-# --- 3. CEO (XONIM) STRUKTURASI ---
-elif ("CEO" in role or "대표님" in role) and authenticated:
-    st.markdown("<div class='main-title'>👑 CEO SUPREME GRAND MANAGEMENT MATRIX</div>", unsafe_allow_html=True)
-    st.markdown("<div class='welcome-text'>Xonim, kompaniyangizning eng yuqori darajadagi boshqaruv markaziga xush kelibsiz! Barcha mayda detallar sizning nazoratingizda.</div>", unsafe_allow_html=True)
-    
-    c_tab1, c_tab2, c_tab3, c_tab4, c_tab5 = st.tabs(["📈 Moliyaviy va Strategik Dashboard", "📅 Keldi-Ketdi & Jadvallar", "👥 Kadrlar (Staff) Ro'yxati", "📅 Strategik Mitinglar Rejasi", "📩 Shikoyat/Takliflar Paneli"])
-    
-    with c_tab1:
-        st.subheader("🚀 Korporativ Oliy Ko'rsatkichlar")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Kunlik Sof Daromad", "$1,250", "+12%")
-        col2.metric("Yangi Global Mijozlar", "45", "+5%")
-        col3.metric("Faol Xalqaro Loyihalar", "8", "0")
-        
-        st.write("")
-        st.subheader("💰 Moliyaviy Tahlil Grafigi")
-        df_fin = pd.DataFrame({
-            'Oy': ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun'],
-            'Daromad ($)': [5000, 7000, 8500, 12000, 11500, 14000],
-            'Xarajat ($)': [3000, 3500, 4000, 4500, 4200, 4800]
-        })
-        st.line_chart(df_fin.set_index('Oy'))
-        
-    with c_tab2:
-        st.subheader("📅 Davomat va Ish Jadvallarining Markaziy Nazorati")
-        st.write("Menejer va ishchilarning jadvallari muvofiqligi:")
-        st.dataframe(pd.DataFrame(st.session_state.attendance_logs), use_container_width=True)
-        st.write("---")
-        st.markdown("#### 💰 Avtomatlashtirilgan Oylik Maosh Generator")
-        
-        if st.button("🧮 Hisobotni Generatsiya Qilish"):
-            # Yuqorida yozilgan maosh funksiyasini chaqiramiz
-            final_sum = calculate_payroll_logic(22, 176, 12, 90, 3200000, 'Monthly')
-            st.success(f"🤖 Tizim hisobladi. Namuna xodimning yakuniy maoshi: {final_sum:,} WON")
+        # ==========================================
+        # TAB 2: YANGI XODIM RO'YXATDAN O'TISHI
+        # ==========================================
+        with tab2:
+            st.subheader(f"📝 {lang_dict[lang]['worker_reg']}")
             
-            # Eksport uchun jadval tuzamiz
-            report_df = pd.DataFrame([{
-                "Xodim": "Namuna Xodim",
-                "Ishlagan kunlari": 22,
-                "Kechikish (Daqiqa)": 12,
-                "Overtime (Daqiqa)": 90,
-                "Yakuniy Maosh (WON)": final_sum
-            }])
+            new_name = st.text_input("Xodim ism-familiyasi:")
+            col_b1, col_b2, col_b3 = st.columns(3)
             
-            st.download_button(
-                label="📊 Excel (CSV) formatda yuklab olish",
-                data=report_df.to_csv(index=False).encode('utf-8'),
-                file_name="Oylik_Finans_Hisoboti.csv",
-                mime="text/csv"
+            with col_b1:
+                b_year = st.selectbox("Tug'ilgan yil:", list(range(1960, 2010))[::-1])
+            with col_b2:
+                b_month = st.selectbox("Tug'ilgan oy:", list(range(1, 13)))
+            with col_b3:
+                b_day = st.selectbox("Tug'ilgan kun:", list(range(1, 32)))
+                
+            if st.button(lang_dict[lang]["save_btn"], key="save_worker"):
+                if new_name:
+                    new_id = f"EMP-{len(st.session_state.workers_list) + 1:02d}"
+                    st.session_state.workers_list.append({
+                        "ID": new_id,
+                        "Ism": new_name,
+                        "Tugilgan_sana": f"{b_year}-{b_month:02d}-{b_day:02d}"
+                    })
+                    st.success(f"{new_name} bazaga qo'shildi! ID: {new_id}")
+                else:
+                    st.error("Iltimos, ism-familiyani kiriting.")
+        # ==========================================
+        # TAB 3: SHIKOYAT VA TAKLIFLAR
+        # ==========================================
+        with tab3:
+            st.subheader(f"🗣️ {lang_dict[lang]['feedback_title']}")
+            
+            worker_for_feedback = st.selectbox(
+                lang_dict[lang]["select_worker"], 
+                [w["Ism"] for w in st.session_state.workers_list],
+                key="feedback_worker_select"
             )
+            feedback_text = st.text_area("Xabaringizni yozing (Taklif yoki muammo):")
+            
+            if st.button("Yuborish / Submit", key="submit_feedback"):
+                if feedback_text:
+                    st.session_state.feedbacks.append({
+                        "Sana": datetime.date.today().strftime("%Y-%m-%d"),
+                        "Xodim": worker_for_feedback,
+                        "Xabar": feedback_text
+                    })
+                    st.success("Xabaringiz rahbariyatga yuborildi! Katta rahmat.")
+                else:
+                    st.error("Iltimos, xabar matnini kiriting.")
 
-    with c_tab3:
-        st.subheader("👥 Barcha Xodimlarning Tug'ilgan kunlari va Ma'lumotlari")
-        st.dataframe(pd.DataFrame(st.session_state.workers_list), use_container_width=True)
+    # --- 2. MENEJER (MANAGER) STRUKTURASI ---
+    elif "Menejer" in role or "Manager" in role or "매니저" in role:
+        st.markdown(f"<div class='main-title'>📊 {lang_dict[lang]['manager_title']}</div>", unsafe_allow_html=True)
+        st.markdown("---")
         
-    with c_tab4:
-        st.subheader("📅 Oliy Strategik Mitinglar va Yig'ilishlar Rejasi")
-        meetings_data = pd.DataFrame({
-            "Sana": ["2026-06-28", "2026-07-01", "2026-07-05"],
-            "Vaqt": ["10:00", "14:00", "11:00"],
-            "Miting Mavzusi": ["Menejerlar bilan haftalik hisobot yig'ilishi", "Yangi xalqaro investorlar bilan uchrashuv", "Kadrlar davomati va oylik natijalar tahlili"],
-            "Status": ["Rejalashtirilgan 🗓️", "Yuqori Muhim 🔥", "Kutish jarayonida ⏳"]
-        })
-        st.dataframe(meetings_data, use_container_width=True)
+        m_tab1, m_tab2 = st.tabs(["👥 Ishchilar va Keldi-Ketdi", "📅 Dam olish so'rovlari"])
         
-    with c_tab5:
-        st.subheader("📩 Xodimlardan Kelib Tushgan Murojaat va Takliflar")
-        st.write("Ushbu bo'lim faqat Xonimga va Oliy Raxbariyatga ko'rinadi:")
-        st.dataframe(pd.DataFrame(st.session_state.feedbacks), use_container_width=True)
+        with m_tab1:
+            st.subheader("Bugungi Keldi-Ketdi Hisoboti")
+            if st.session_state.attendance_logs:
+                df_logs = pd.DataFrame(st.session_state.attendance_logs)
+                st.dataframe(df_logs, use_container_width=True)
+            else:
+                st.info("Hozircha ma'lumot yo'q.")
+                
+            st.subheader("Barcha Ishchilar Ro'yxati")
+            df_workers = pd.DataFrame(st.session_state.workers_list)
+            st.dataframe(df_workers, use_container_width=True)
+            
+        with m_tab2:
+            st.subheader("Dam olish kunlari so'rovlari")
+            if st.session_state.vacation_requests:
+                for worker, days in st.session_state.vacation_requests.items():
+                    st.write(f"**{worker}**: {', '.join(days)} - kunlar")
+            else:
+                st.info("Hozircha so'rovlar kelib tushmadi.")
 
-else:
-    st.warning("⚠️ Iltimos, boshqaruv tizimiga kirish uchun chap paneldagi parolni kiriting (CEO: ceo123, Manager: mgr123).")
+    # --- 3. CEO (BOSHQARUV) STRUKTURASI ---
+    elif "CEO" in role or "대표" in role or "Boshqaruv" in role:
+        st.markdown(f"<div class='main-title'>📈 {lang_dict[lang]['ceo_title']}</div>", unsafe_allow_html=True)
+        st.markdown("---")
+        
+        c_tab1, c_tab2 = st.tabs(["Umumiy Statistika", "Shikoyat va Takliflar"])
+        
+        with c_tab1:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Jami Ishchilar", len(st.session_state.workers_list))
+            col2.metric("Bugungi Keldi-Ketdi", len(st.session_state.attendance_logs))
+            col3.metric("Kutilyotgan Shikoyatlar", len(st.session_state.feedbacks))
+            
+            st.subheader("To'liq Hisobot")
+            if st.session_state.attendance_logs:
+                df_logs = pd.DataFrame(st.session_state.attendance_logs)
+                st.dataframe(df_logs, use_container_width=True)
+            else:
+                st.write("Ma'lumot yo'q")
+                
+        with c_tab2:
+            st.subheader("Xodimlar tomonidan bildirilgan fikrlar")
+            if st.session_state.feedbacks:
+                for idx, fb in enumerate(st.session_state.feedbacks):
+                    st.warning(f"**{fb['Xodim']}** ({fb['Sana']}): {fb['Xabar']}")
+            else:
+                st.success("Hozircha hech qanday shikoyat yoki taklif yo'q.")
