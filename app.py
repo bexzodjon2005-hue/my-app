@@ -119,8 +119,21 @@ lang_dict = {
         "feedback_title": "📩 건의 및 불만 접수 창구",
         "manager_title": "💼 매니저 통합 관리 센터",
         "ceo_title": "👑 CEO 최고 경영 통합 관제 센터"
+       "O'zbekcha": {
+        "nav_menu": "Asosiy Menyu",
+        # ... qolganlar ...
+        "check_in": "🚪 KELISH (Check-In)",  <-- Mana shunday qo'shasiz
+    },
+    "한국어": {
+        "nav_menu": "메인 메뉴",
+        # ... qolganlar ...
+        "check_in": "🚪 출근 (Check-In)",     <-- Mana shunday qo'shasiz
     }
+ }
 }
+
+# Tilni sessiyadan olish
+lang = st.session_state.get('lang', 'O\'zbekcha')
 
 # --- SESSYA BAZASI (Ma'lumotlar yo'qolib ketmasligi uchun Streamlit State) ---
 if "workers_list" not in st.session_state:
@@ -179,38 +192,38 @@ if "Ishchi" in role or "Staff" in role or "직원" in role:
     
     # Keldi-Ketdi Oynasi (QR o'rniga dinamik tugma)
     with tab1:
-        st.subheader("📲 Real-vaqt rejimida keldi-ketdi skanerlash")
-        st.write("QR kod skaner qilinganda tizim avtomat ishchining vaqtini va holatini aniqlaydi.")
+            st.subheader("📲 Real-vaqt rejimida keldi-ketdi skanerlash")
+            st.write("QR kod skaner qilinganda tizim avtomat ishchining vaqtini va holatini aniqlaydi.")
         
-        current_time_str = datetime.datetime.now().strftime("%H:%M")
-        current_date_str = datetime.date.today().strftime("%Y-%m-%d")
+            current_time_str = datetime.datetime.now().strftime("%H:%M")
+            current_date_str = datetime.date.today().strftime("%Y-%m-%d")
         
-        st.info(f"📅 Bugungi sana: {current_date_str} | ⏰ Joriy vaqt: {current_time_str}")
+            st.info(f"📅 Bugungi sana: {current_date_str} | ⏰ Joriy vaqt: {current_time_str}")
         
-        selected_worker = st.selectbox("Ism-familiyangizni tanlang:", [w["Ism"] for w in st.session_state.workers_list])
-        worker_id = [w["ID"] for w in st.session_state.workers_list if w["Ism"] == selected_worker][0]
+            selected_worker = st.selectbox("Ism-familiyangizni tanlang:", [w["Ism"] for w in st.session_state.workers_list])
+            worker_id = [w["ID"] for w in st.session_state.workers_list if w["Ism"] == selected_worker][0]
         
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🚪 KELISH (Check-In)", type="primary", use_container_width=True):
-                # 09:00 dan oldin kelsa erta, keyin kelsa kechikdi
-                is_late = datetime.datetime.now().hour >= 9 and datetime.datetime.now().minute > 0
-                status_text = "Kechikdi ⚠️" if is_late else "Erta keldi ✅"
-                wish = random.choice(late_wishes) if is_late else random.choice(early_wishes)
+            col_btn1, col_btn2 = st.columns(2)
+            with col_btn1:
+                if st.button(lang_dict[lang]["check_in"], type="primary", use_container_width=True):
+                    # 09:00 dan oldin kelsa erta, keyin kelsa kechikdi
+                    is_late = datetime.datetime.now().hour >= 9 and datetime.datetime.now().minute > 0
+                    status_text = "Kechikdi ⚠️" if is_late else "Erta keldi ✅"
+                    wish = random.choice(late_wishes) if is_late else random.choice(early_wishes)
                 
-                st.session_state.attendance_logs.append({
-                    "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Keldi (Check-In)", "Holat": status_text
-                })
-                st.success(wish)
-                st.balloons()
+                    st.session_state.attendance_logs.append({
+                        "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Keldi (Check-In)", "Holat": status_text
+                    })
+                    st.success(wish)
+                    st.balloons()
                 
-        with col_btn2:
-            if st.button("🏡 KETISH (Check-Out)", use_container_width=True):
-                wish = random.choice(goodbye_wishes)
-                st.session_state.attendance_logs.append({
-                    "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Ketish (Check-Out)", "Holat": "Ish yakunlandi 🏁"
-                })
-                st.info(wish)
+            with col_btn2:
+                if st.button(lang_dict[lang]["check_out"], use_container_width=True):
+                    wish = random.choice(goodbye_wishes)
+                    st.session_state.attendance_logs.append({
+                        "Sana": current_date_str, "ID": worker_id, "Xodim": selected_worker, "Vaqt": current_time_str, "Tur": "Ketish (Check-Out)", "Holat": "Ish yakunlandi 🏁"
+                    })
+                    st.info(wish)
         
         st.markdown("---")
         # 20-22 kunlar orasidagi aqlli dam olish kunini tanlash tizimi
