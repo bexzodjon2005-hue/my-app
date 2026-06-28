@@ -119,16 +119,17 @@ lang_dict = {
         "feedback_title": "📩 건의 및 불만 접수 창구",
         "manager_title": "💼 매니저 통합 관리 센터",
         "ceo_title": "👑 CEO 최고 경영 통합 관제 센터"
-       "O'zbekcha": {
+           "O'zbekcha": {
         "nav_menu": "Asosiy Menyu",
-        # ... qolganlar ...
-        "check_in": "🚪 KELISH (Check-In)",  <-- Mana shunday qo'shasiz
+        "check_in": "🚪 KELISH (Check-In)",
+        "check_out": "🏠 KETISH (Check-Out)",
     },
     "한국어": {
         "nav_menu": "메인 메뉴",
-        # ... qolganlar ...
-        "check_in": "🚪 출근 (Check-In)",     <-- Mana shunday qo'shasiz
-    }
+        "check_in": "🚪 출근 (Check-In)",
+        "check_out": "🏠 퇴근 (Check-Out)",
+    },
+
  }
 }
 
