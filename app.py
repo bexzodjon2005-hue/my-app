@@ -272,6 +272,53 @@ def render_manager_dashboard():
 
 
 # ==============================================================================
+# 7. EMPLOYEE DASHBOARD (Xodim Paneli)
+# ==============================================================================
+def render_employee_dashboard():
+    st.header("📱 Xodim Ish Paneli")
+    st.markdown(f"**Xodim:** `{st.session_state.user.get('name', 'Nomaʼlum')}` | **Filial ID:** `{st.session_state.get('branch_id', 'Nomaʼlum')}`")
+    
+    st.divider()
+    
+    # Davomat (Check-in / Check-out) bo'limi
+    st.subheader("⏱️ Ish vaqtini hisobga olish (Davomat)")
+    
+    if "checked_in" not in st.session_state:
+        st.session_state.checked_in = False
+        
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if not st.session_state.checked_in:
+            if st.button("🚀 Ishni boshlash (Check-in)", type="primary", use_container_width=True):
+                st.session_state.checked_in = True
+                st.success("Ish vaqti boshlandi! Smenaga kirdingiz.")
+                st.rerun()
+        else:
+            st.button("🚀 Ishni boshlash (Kirdingiz)", type="primary", disabled=True, use_container_width=True)
+            
+    with col2:
+        if st.session_state.checked_in:
+            if st.button("🛑 Ishni yakunlash (Check-out)", type="secondary", use_container_width=True):
+                st.session_state.checked_in = False
+                st.warning("Ish vaqti yakunlandi! Smenadan chiqdingiz.")
+                st.rerun()
+        else:
+            st.button("🛑 Ishni yakunlash", type="secondary", disabled=True, use_container_width=True)
+            
+    st.markdown("---")
+    
+    # Bugungi vazifalar
+    st.subheader("📅 Bugungi Vazifalarim")
+    tasks = [
+        {"Vazifa": "Filialni ochish va tozalikni tekshirish", "Holat": "✅ Bajarildi"},
+        {"Vazifa": "Kassani tekshirish va kunlik hisobotni boshlash", "Holat": "✅ Bajarildi"},
+        {"Vazifa": "Mijozlarga xizmat ko'rsatish va tovarlar qoldig'ini yangilash", "Holat": "⏳ Jarayonda"}
+    ]
+    for t in tasks:
+        st.write(f"{t['Holat']} — {t['Vazifa']}")
+
+# ==============================================================================
 # 5. ASOSIY ROUTER (Main Application Workflow)
 # ==============================================================================
 def main():
@@ -298,7 +345,7 @@ def main():
         elif st.session_state.role == "Manager":
             render_manager_dashboard()
         elif st.session_state.role == "Employee":
-            st.warning("📱 Siz Employee tizimidasiz. 7-bo'lim (Employee Panel) kodi shu yerga joylashadi.")
+            render_employee_dashboard()
 
 if __name__ == "__main__":
     main()
