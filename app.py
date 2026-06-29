@@ -169,6 +169,63 @@ def render_login_page():
 
 
 # ==============================================================================
+# 5. CEO DASHBOARD (Boshqaruv Paneli)
+# ==============================================================================
+import pandas as pd
+
+def render_ceo_dashboard():
+    st.header("📈 CEO Boshqaruv Paneli")
+    st.markdown("Umumiy filiallar va xodimlar holati statistikasi.")
+
+    # Yuqori ko'rsatkichlar (KPI metrics)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(label="Umumiy filiallar", value="12 ta", delta="+2 ta yangi")
+    with col2:
+        st.metric(label="Jami xodimlar", value="145 ta", delta="+5 ta")
+    with col3:
+        st.metric(label="Bugungi davomat", value="92%", delta="-3%")
+    with col4:
+        st.metric(label="Faol smenalar", value="8 ta")
+
+    st.markdown("---")
+
+    # Grafik va jadvallar uchun 2 ta ustun
+    left_col, right_col = st.columns([2, 1])
+
+    with left_col:
+        st.subheader("📊 Filiallar bo'yicha davomat (Haftalik)")
+        # Namuna ma'lumotlar (Baza to'liq ishlaganda Supabase'dan olinadi)
+        chart_data = pd.DataFrame({
+            "Filiallar": ["Toshkent", "Samarqand", "Buxoro", "Farg'ona", "Xorazm"],
+            "Kelganlar": [45, 30, 25, 35, 10]
+        }).set_index("Filiallar")
+        st.bar_chart(chart_data)
+
+    with right_col:
+        st.subheader("🏢 Filiallar holati")
+        branches = st.session_state.get("branches", [])
+        if branches:
+            for branch in branches:
+                with st.container():
+                    status_color = "🟢" if branch.get("status") == "Active" else "🔴"
+                    st.write(f"{status_color} **{branch.get('branch_name', 'Nomsiz')}**")
+                    st.caption(f"ID: {branch.get('id')} | Menejer: {branch.get('manager_id')}")
+                    st.divider()
+        else:
+            st.info("Filiallar ro'yxati bo'sh.")
+
+    # Tezkor harakatlar tugmalari
+    st.markdown("### ⚡ Tezkor harakatlar")
+    btn1, btn2, btn3 = st.columns(3)
+    if btn1.button("➕ Yangi filial qo'shish", use_container_width=True):
+        st.warning("Bu funksiya kelgusi qismlarda ulanadi.")
+    if btn2.button("📄 Umumiy hisobotni yuklash", use_container_width=True):
+        st.success("Hisobot yuklanmoqda...")
+    if btn3.button("⚙️ Tizim sozlamalari", use_container_width=True):
+        st.info("Sozlamalar sahifasi tez orada qo'shiladi.")
+
+# ==============================================================================
 # 5. ASOSIY ROUTER (Main Application Workflow)
 # ==============================================================================
 def main():
@@ -190,7 +247,8 @@ def main():
         
         # Rolga qarab tegishli modullarni yo'naltirish
         if st.session_state.role == "CEO":
-            st.success("🎯 Siz CEO tizimidasiz. 5-bo'lim (CEO Dashboard) kodi shu yerga joylashadi.")
+            render_ceo_dashboard()
+
         elif st.session_state.role == "Manager":
             st.info("📊 Siz Manager tizimidasiz. 6-bo'lim (Manager Panel) kodi shu yerga joylashadi.")
         elif st.session_state.role == "Employee":
