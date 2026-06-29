@@ -215,14 +215,28 @@ def render_ceo_dashboard():
         else:
             st.info("Filiallar ro'yxati bo'sh.")
 
-    # Tezkor harakatlar tugmalari
+    # Tezkor harakatlar tugmalari va Formalar
     st.markdown("### ⚡ Tezkor harakatlar")
-    btn1, btn2, btn3 = st.columns(3)
-    if btn1.button("➕ Yangi filial qo'shish", use_container_width=True):
-        st.warning("Bu funksiya kelgusi qismlarda ulanadi.")
-    if btn2.button("📄 Umumiy hisobotni yuklash", use_container_width=True):
+    
+    # Yangi filial qo'shish formasi (Ochiluvchi oyna)
+    with st.expander("➕ Yangi filial qo'shish", expanded=False):
+        with st.form("add_branch_form"):
+            st.write("Yangi filial ma'lumotlarini kiriting:")
+            b_name = st.text_input("Filial nomi (Masalan: Chilonzor-1)")
+            b_manager = st.text_input("Menejerning ism-familiyasi")
+            b_address = st.text_input("Manzil")
+            
+            if st.form_submit_button("Filialni saqlash", type="primary"):
+                if b_name and b_manager:
+                    st.success(f"✅ {b_name} filiali tizimga muvaffaqiyatli qo'shildi!")
+                else:
+                    st.error("Iltimos, filial nomi va menejer ismini to'liq kiriting.")
+
+    # Boshqa tugmalar
+    col_btn1, col_btn2 = st.columns(2)
+    if col_btn1.button("📄 Umumiy hisobotni yuklash", use_container_width=True):
         st.success("Hisobot yuklanmoqda...")
-    if btn3.button("⚙️ Tizim sozlamalari", use_container_width=True):
+    if col_btn2.button("⚙️ Tizim sozlamalari", use_container_width=True):
         st.info("Sozlamalar sahifasi tez orada qo'shiladi.")
 
 # ==============================================================================
