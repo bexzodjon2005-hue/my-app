@@ -30,8 +30,8 @@ st.markdown("""
 # 2. SUPABASE INTEGRATSIYASI (Database Connection)
 # ==============================================================================
 # GitHub Secrets yoki mahalliy .env fayldan oqiydi
-SUPABASE_URL = st.secrets.get("SUPABASE_URL", os.getenv("SUPABASE_URL", "https://your-project.supabase.co"))
-SUPABASE_KEY = st.secrets.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY", "your-anon-key"))
+SUPABASE_URL = "https://xyz-your-real-project.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...real-anon-key"
 
 @st.cache_resource
 def init_supabase() -> Client:
@@ -214,6 +214,24 @@ def render_ceo_dashboard():
                     st.divider()
         else:
             st.info("Filiallar ro'yxati bo'sh.")
+
+        st.markdown("---")
+    st.markdown("### 📊 Filiallar faoliyati tahlili")
+    
+    # Namuna ma'lumot (Keyinchalik bazadan ulanadi)
+    df_branches = pd.DataFrame({
+        "Filial": ["Chilonzor", "Yunusobod", "Shayxontohur"],
+        "Tushum (mln so'm)": [45, 38, 52],
+        "Xodimlar soni": [12, 10, 15],
+        "Samaradorlik": [92, 85, 96]
+    })
+    
+    # Jadvalni ko'rsatish
+    st.table(df_branches)
+    
+    # Grafik qo'shish
+    st.subheader("Oylik tushum dinamikasi")
+    st.bar_chart(df_branches.set_index("Filial")["Tushum (mln so'm)"])
 
     # Tezkor harakatlar tugmalari va Formalar
     st.markdown("### ⚡ Tezkor harakatlar")
