@@ -284,6 +284,24 @@ def render_manager_dashboard():
         })
         st.table(df_shifts)
 
+    st.markdown("---")
+    st.markdown("### ⚙️ Filial boshqaruvi")
+    
+    # Yangi xodim qo'shish formasi
+    with st.expander("➕ Yangi xodim qo'shish", expanded=False):
+        with st.form("add_employee_form"):
+            st.write("Yangi xodim ma'lumotlarini kiriting:")
+            e_name = st.text_input("Xodimning ism-familiyasi (Masalan: Alisher Valiyev)")
+            e_role = st.selectbox("Lavozimi", ["Sotuvchi", "Kassir", "Omborchi", "Farrosh"])
+            e_phone = st.text_input("Telefon raqami")
+            
+            if st.form_submit_button("Xodimni saqlash", type="primary"):
+                if e_name and e_phone:
+                    st.success(f"✅ {e_name} filial jamoasiga muvaffaqiyatli qo'shildi!")
+                else:
+                    st.error("Iltimos, xodimning ism-familiyasi va telefon raqamini to'liq kiriting.")
+
+
 
 # ==============================================================================
 # 7. EMPLOYEE DASHBOARD (Xodim Paneli)
