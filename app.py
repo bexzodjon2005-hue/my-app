@@ -66,36 +66,107 @@ def logout():
     st.rerun()
 
 # ==============================================================================
-# 4. LOGIN VA AVTORIZATSIYA (Boshlang'ich mockup - 4-bo'limda to'liq ulanadi)
+# 4. HAKIQIY AUTENTIFIKATSIYA VA TIZIMGA KIRISH (Login & RBAC)
 # ==============================================================================
+import hashlib
+
+def hash_password(password: str) -> str:
+    """Parolni xavfsiz saqlash va tekshirish uchun xeshlash"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def authenticate_user(email, password):
+    """Supabase bazasidagi users jadvali orqali foydalanuvchini tekshirish"""
+    if not supabase:
+        return None
+    try:
+        # Tizimdan o'chirilmagan (deleted_at is null) foydalanuvchini email orqali qidirish
+        response = supabase.table("users").select("*").eq("email", email).is_("deleted_at", "null").execute()
+        if response.data:
+            user = response.data[0]
+            # Kiritilgan parol bazadagi parolga mos kelishini tekshirish
+            # (Agar bazada xeshlangan yoki oddiy saqlangan bo'lsa)
+            if user.get("password") == password or user.get("password") == hash_password(password):
+                return user
+        return None
+    except Exception as e:
+        st.error(f"❌ Avtorizatsiya tizimida xatolik: {e}")
+        return None
+
 def render_login_page():
-    st.subheader("🔑 Tizimga kirish")
-    st.write("Iltimos, profilingizga mos kirish turini tanlang (Hozircha tezkor test rejimi):")
+    st.markdown("<h2 style='text-align: center; color: #2C3E50;'>🔐 Tizimga kirish</h2>", unsafe_allow_html=True)
+    st.write("")
     
-    col1, col2, col3 = st.columns(3)
+    # Ekranning o'rtasida chiroyli shakl yaratish uchun ustunlardan foydalanamiz
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    with col1:
-        if st.button("🚀 CEO sifatida kirish", use_container_width=True):
-            st.session_state.user = {"name": "Asilbek R.", "email": "ceo@company.com"}
+    with col2:
+        st.markdown("### Xush kelibsiz!")
+        with st.form("login_form"):
+            email = st.text_input("Elektron pochta", placeholder="misol@kompaniya.com")
+            password = st.text_input("Parol", type="password")
+            submit_button = st.form_submit_button("Tizimga kirish", use_container_width=True)
+            
+            if submit_button:
+                if email and password:
+                    user_data = authenticate_user(email, password)
+                    
+                    if user_data:
+                        # Muvaffaqiyatli kirish: Sessiyani to'ldirish
+                        first_name = user_data.get('first_name', '')
+                        last_name = user_data.get('last_name', '')
+                        st.session_state.user = {
+                            "name": f"{first_name} {last_name}".strip(),
+                            "email": email,
+                            "id": user_data.get("id")
+                        }
+                        st.session_state.role = user_data.get("role")
+                        st.session_state.branch_id = user_data.get("branch_id")
+                        st.session_state.page = "Dashboard"
+                        
+                        # Audit logga yozish (Muvaffaqiyatli kirish)
+                        execute_db_transaction("audit_logs", {
+                            "user_email": email,
+                            "action": "LOGIN_SUCCESS",
+                            "details": f"Rol: {st.session_state.role} tizimga kirdi."
+                        }, operation="insert")
+                        
+                        st.rerun()
+                    else:
+                        st.error("❌ Email yoki parol noto'g'ri!")
+                        # Audit logga yozish (Omadsiz urinish)
+                        execute_db_transaction("audit_logs", {
+                            "user_email": email,
+                            "action": "LOGIN_FAILED",
+                            "details": "Noto'g'ri parol yoki email kiritildi."
+                        }, operation="insert")
+                else:
+                    st.warning("⚠️ Iltimos, barcha maydonlarni to'ldiring.")
+
+    # DIQQAT: Hozircha sizda Supabase'da jadvallar to'liq tayyor bo'lmasligi mumkin.
+    # Shuning uchun kodni oson sinab ko'rishingiz uchun "Tezkor kirish" tugmalarini ham qo'shdim.
+    # Baza to'liq ishlaganda bu qismni o'chirib tashlaymiz.
+    st.markdown("---")
+    with st.expander("🛠️ Dasturchi uchun tezkor test rejimi (Baza ishlamayotgan payt uchun)"):
+        st.info("Bu qism orqali hozircha parolsiz kirib, panellarni dizaynini ko'rishingiz mumkin.")
+        c1, c2, c3 = st.columns(3)
+        if c1.button("🚀 CEO Paneliga o'tish", use_container_width=True):
+            st.session_state.user = {"name": "Asilbek R.", "email": "ceo@test.com", "id": "U1"}
             st.session_state.role = "CEO"
             st.session_state.page = "Dashboard"
             st.rerun()
-            
-    with col2:
-        if st.button("👔 Manager sifatida kirish", use_container_width=True):
-            st.session_state.user = {"name": "Menejer Olimjon", "email": "manager@toshkent.com"}
+        if c2.button("👔 Manager Paneliga o'tish", use_container_width=True):
+            st.session_state.user = {"name": "Menejer Olimjon", "email": "manager@test.com", "id": "U2"}
             st.session_state.role = "Manager"
             st.session_state.branch_id = "B001"
             st.session_state.page = "Dashboard"
             st.rerun()
-            
-    with col3:
-        if st.button("👨‍💻 Employee sifatida kirish", use_container_width=True):
-            st.session_state.user = {"name": "Sardor Umrdinov", "email": "sardor@staff.com"}
+        if c3.button("👨‍💻 Employee Paneliga o'tish", use_container_width=True):
+            st.session_state.user = {"name": "Sardor Umrdinov", "email": "employee@test.com", "id": "U3"}
             st.session_state.role = "Employee"
             st.session_state.branch_id = "B001"
             st.session_state.page = "Dashboard"
             st.rerun()
+
 
 # ==============================================================================
 # 5. ASOSIY ROUTER (Main Application Workflow)
