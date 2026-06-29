@@ -396,6 +396,11 @@ def main():
             render_manager_dashboard()
         elif st.session_state.role == "Employee":
             render_employee_dashboard()
+        # ==============================================================================
+        # 10. YAKUNIY QISM (Footer)
+        # ==============================================================================
+        st.markdown("---")
+        st.markdown("<p style='text-align: center; color: gray;'>Smart Branch Management System © 2026 | Barcha huquqlar himoyalangan</p>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
