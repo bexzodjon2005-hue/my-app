@@ -226,6 +226,52 @@ def render_ceo_dashboard():
         st.info("Sozlamalar sahifasi tez orada qo'shiladi.")
 
 # ==============================================================================
+# 6. MANAGER DASHBOARD (Filial Menejeri Paneli)
+# ==============================================================================
+def render_manager_dashboard():
+    st.header("👔 Menejer Paneli")
+    st.markdown(f"**Sizning filialingiz ID raqami:** `{st.session_state.get('branch_id', 'Nomaʼlum')}`")
+    
+    st.divider()
+    
+    # Kichik statistika
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Smenadagi xodimlar", "12 / 15", "-3 (Kelmadi)")
+    with col2:
+        st.metric("Bugungi tushum (Kutilma)", "12.5 mln", "+1.2 mln")
+    with col3:
+        st.metric("Vazifalar holati", "80%", "Qoniqarli")
+        
+    st.markdown("### 👥 Xodimlar davomati va Smenalar")
+    
+    # 2 ta bo'limli oyna (Tabs)
+    tab1, tab2 = st.tabs(["📋 Davomatni tasdiqlash", "📅 Smena jadvali"])
+    
+    with tab1:
+        st.info("Bugungi davomat ro'yxati (Tasdiqlash kutilmoqda)")
+        # Namuna ma'lumot (Keyinchalik bazadan ulanadi)
+        df_attendance = pd.DataFrame({
+            "Xodim": ["Sardor Umrdinov", "Ali Valiyev", "Zarina To'rayeva"],
+            "Kelgan vaqti": ["08:50", "09:05", "08:55"],
+            "Holat": ["Vaqtida", "Kechikdi", "Vaqtida"]
+        })
+        st.dataframe(df_attendance, use_container_width=True)
+        
+        if st.button("✅ Barchasini tasdiqlash", type="primary"):
+            st.success("Davomat muvaffaqiyatli tasdiqlandi!")
+            
+    with tab2:
+        st.write("Joriy haftalik smena jadvali")
+        df_shifts = pd.DataFrame({
+            "Kun": ["Dushanba", "Seshanba", "Chorshanba"],
+            "Ertalab (08:00-16:00)": ["Sardor, Ali", "Zarina, Ali", "Sardor, Zarina"],
+            "Kechasi (16:00-00:00)": ["Zarina, Vahob", "Sardor, Vahob", "Ali, Vahob"]
+        })
+        st.table(df_shifts)
+
+
+# ==============================================================================
 # 5. ASOSIY ROUTER (Main Application Workflow)
 # ==============================================================================
 def main():
@@ -250,7 +296,7 @@ def main():
             render_ceo_dashboard()
 
         elif st.session_state.role == "Manager":
-            st.info("📊 Siz Manager tizimidasiz. 6-bo'lim (Manager Panel) kodi shu yerga joylashadi.")
+            render_manager_dashboard()
         elif st.session_state.role == "Employee":
             st.warning("📱 Siz Employee tizimidasiz. 7-bo'lim (Employee Panel) kodi shu yerga joylashadi.")
 
